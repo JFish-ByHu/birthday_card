@@ -246,6 +246,8 @@
         const meterFill = document.querySelector("#meterFill");
         const wishCount = document.querySelector("#wishCount");
         const music = document.querySelector("#birthdayMusic");
+        const birthdayGuest = new Image();
+        birthdayGuest.src = "86b3c73b1440ef549353246631279aeb.jpg";
         const reducedMotion = window.matchMedia(
           "(prefers-reduced-motion: reduce)",
         ).matches;
@@ -292,6 +294,11 @@
         let windLevel = 0;
         let celebrationAt = 0;
         let wishSmokeAt = 0;
+        let birthdayGuestReady = false;
+
+        birthdayGuest.addEventListener("load", () => {
+          birthdayGuestReady = true;
+        });
 
         function resizeCanvas() {
           const bounds = canvas.getBoundingClientRect();
@@ -324,6 +331,14 @@
           if (!celebrationStarted) return 0;
           if (reducedMotion) return 1;
           return Math.min(1, (performance.now() - celebrationAt) / 1600);
+        }
+
+        function cakeSplitProgress() {
+          if (!celebrationStarted) return 0;
+          if (reducedMotion) return 1;
+          const elapsed = performance.now() - celebrationAt;
+          const progress = Math.min(1, Math.max(0, (elapsed - 420) / 1200));
+          return progress * progress * (3 - 2 * progress);
         }
 
         function drawCardCover(time, openness) {
@@ -543,6 +558,20 @@
           context.lineWidth = 3;
           context.strokeRect(195, 504, 570, 32);
 
+          const split = cakeSplitProgress();
+          if (!split) {
+            drawCakeDetails(time);
+            return;
+          }
+
+          drawBirthdayGuest(split);
+          const distance = split * 154;
+          const lift = -Math.sin(split * Math.PI) * 9;
+          drawCakeHalf(time, "left", -distance, lift);
+          drawCakeHalf(time, "right", distance, lift);
+        }
+
+        function drawCakeDetails(time) {
           drawLayer(244, 392, 470, 118, "#f49a82", "#bd5d62", "#fff2d5", time);
           drawLayer(
             287,
@@ -576,6 +605,85 @@
 
           candles.forEach((candle, index) => drawCandle(candle, index, time));
           drawCherry(485, 211);
+        }
+
+        function drawCakeHalf(time, side, offsetX, offsetY) {
+          context.save();
+          context.translate(offsetX, offsetY);
+          context.beginPath();
+          context.rect(side === "left" ? 195 : 480, 195, 285, 325);
+          context.clip();
+          drawCakeDetails(time);
+          context.restore();
+        }
+
+        function drawBirthdayGuest(split) {
+          if (!birthdayGuestReady) return;
+          const reveal = Math.min(1, Math.max(0, (split - 0.12) / 0.45));
+          const rise = 1 - reveal;
+          const frameWidth = 226;
+          const frameHeight = 286;
+          const frameX = (designWidth - frameWidth) / 2;
+          const frameY = 154 + rise * 78;
+          const imagePadding = 10;
+          const innerWidth = frameWidth - imagePadding * 2;
+          const innerHeight = frameHeight - imagePadding * 2;
+          const scale = Math.min(
+            innerWidth / birthdayGuest.naturalWidth,
+            innerHeight / birthdayGuest.naturalHeight,
+          );
+          const imageWidth = birthdayGuest.naturalWidth * scale;
+          const imageHeight = birthdayGuest.naturalHeight * scale;
+          const imageX = frameX + (frameWidth - imageWidth) / 2;
+          const imageY = frameY + (frameHeight - imageHeight) / 2;
+
+          context.save();
+          context.globalAlpha = reveal;
+          context.fillStyle = "rgba(76, 48, 68, 0.26)";
+          context.beginPath();
+          context.ellipse(
+            480,
+            frameY + frameHeight + 10,
+            105,
+            12,
+            0,
+            0,
+            Math.PI * 2,
+          );
+          context.fill();
+          drawRoundedRect(
+            frameX,
+            frameY,
+            frameWidth,
+            frameHeight,
+            8,
+            "#fffaf0",
+          );
+          context.strokeStyle = "#f1c162";
+          context.lineWidth = 5;
+          context.strokeRect(
+            frameX + 2.5,
+            frameY + 2.5,
+            frameWidth - 5,
+            frameHeight - 5,
+          );
+          context.beginPath();
+          context.roundRect(
+            frameX + imagePadding,
+            frameY + imagePadding,
+            innerWidth,
+            innerHeight,
+            4,
+          );
+          context.clip();
+          context.drawImage(
+            birthdayGuest,
+            imageX,
+            imageY,
+            imageWidth,
+            imageHeight,
+          );
+          context.restore();
         }
 
         function drawLayer(
