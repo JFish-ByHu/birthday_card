@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6d790" />
+    <title>Birthday Wish</title>
+    <style>
+      :root {
+        --ink: #352336;
+        --paper: #fff9eb;
+        --sun: #f7bd50;
+        --coral: #e7666d;
+        --mint: #79bda4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(
+              120deg,
+              rgba(231, 102, 109, 0.15) 1px,
+              transparent 1px
+            )
+            0 0 / 22px 22px,
+          linear-gradient(30deg, rgba(121, 189, 164, 0.13) 1px, transparent 1px)
+            0 0 / 22px 22px,
+          #f9e7bd;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        overflow-x: hidden;
+      }
+
+      main {
+        min-height: 100svh;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        justify-items: center;
+        gap: 14px;
+        padding: 22px 20px 18px;
+      }
+
+      .masthead {
+        width: min(1040px, 100%);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: #9e4c57;
+        font-family: "Cooper Black", "Bodoni 72", Georgia, serif;
+        font-size: clamp(1.05rem, 2.5vw, 1.45rem);
+        letter-spacing: 0;
+      }
+
+      .wish-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #885e48;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+
+      .wish-count::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--coral);
+        box-shadow: 0 0 0 4px rgba(231, 102, 109, 0.15);
+      }
+
+      .stage {
+        width: min(1040px, 100%);
+        min-height: 0;
+        display: grid;
+        place-items: center;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 3 / 2;
+        border: 2px solid rgba(91, 57, 73, 0.14);
+        border-radius: 8px;
+        background: #fdf1d2;
+        box-shadow:
+          0 18px 0 rgba(95, 57, 72, 0.08),
+          0 24px 42px rgba(83, 48, 55, 0.14);
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+
+      .control-dock {
+        width: min(1040px, 100%);
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .status {
+        min-width: 0;
+        color: #765645;
+        font-size: 0.84rem;
+        font-weight: 650;
+        letter-spacing: 0.01em;
+      }
+
+      .sound-meter {
+        justify-self: center;
+        width: 94px;
+        height: 7px;
+        overflow: hidden;
+        border: 1px solid rgba(53, 35, 54, 0.16);
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .sound-meter > span {
+        display: block;
+        width: var(--meter, 0%);
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          var(--mint),
+          var(--sun),
+          var(--coral)
+        );
+        transition: width 80ms linear;
+      }
+
+      button {
+        justify-self: end;
+        min-height: 38px;
+        padding: 9px 14px;
+        border: 1px solid #513847;
+        border-radius: 6px;
+        color: #fffaf0;
+        background: #513847;
+        box-shadow: 3px 3px 0 #d8a25f;
+        font: inherit;
+        font-size: 0.83rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition:
+          transform 160ms ease,
+          box-shadow 160ms ease,
+          background 160ms ease;
+      }
+
+      button:hover {
+        background: #6b4254;
+      }
+      button:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0 #d8a25f;
+      }
+      button:focus-visible {
+        outline: 3px solid #ec9b42;
+        outline-offset: 3px;
+      }
+      button[hidden] {
+        display: none;
+      }
+
+      @media (max-width: 620px) {
+        main {
+          grid-template-rows: auto auto auto;
+          align-content: start;
+          gap: 12px;
+          padding: 16px 12px 12px;
+        }
+        canvas {
+          height: auto;
+        }
+        .control-dock {
+          grid-template-columns: 1fr auto;
+        }
+        .sound-meter {
+          display: none;
+        }
+        .status {
+          font-size: 0.78rem;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        button,
+        .sound-meter > span {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="masthead">
+        <p class="eyebrow">Happy Birthday, Star</p>
+        <span class="wish-count" id="wishCount">6 wishes alight</span>
+      </header>
+
+      <section class="stage" aria-label="互动生日蛋糕">
+        <canvas
+          id="birthdayCanvas"
+          aria-label="带六支蜡烛的生日蛋糕，点击火焰可以熄灭蜡烛"
+        ></canvas>
+      </section>
+
+      <footer class="control-dock">
+        <span class="status" id="status" aria-live="polite"
+          >许个愿，然后吹一口气</span
+        >
+        <div class="sound-meter" aria-hidden="true">
+          <span id="meterFill"></span>
+        </div>
+        <button id="microphoneButton" type="button">开启吹气</button>
+      </footer>
+    </main>
+
+    <audio id="birthdayMusic" preload="auto" src="nailong.mp3"></audio>
+
+    <script>
+      (() => {
+        const canvas = document.querySelector("#birthdayCanvas");
+        const context = canvas.getContext("2d");
+        const microphoneButton = document.querySelector("#microphoneButton");
+        const status = document.querySelector("#status");
+        const meterFill = document.querySelector("#meterFill");
+        const wishCount = document.querySelector("#wishCount");
+        const music = document.querySelector("#birthdayMusic");
+        const reducedMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        const designWidth = 960;
+        const designHeight = 640;
+        const candleLayout = [
+          { x: 410, y: 236, color: "#ec7474" },
+          { x: 550, y: 236, color: "#7cbda4" },
+          { x: 315, y: 304, color: "#e7b84f" },
+          { x: 645, y: 304, color: "#8fa8d8" },
+          { x: 270, y: 392, color: "#de83a7" },
+          { x: 690, y: 392, color: "#e97e69" },
+        ];
+
+        let canvasWidth = designWidth;
+        let canvasHeight = designHeight;
+        let startTime = performance.now();
+        let candles = candleLayout.map((candle) => ({
+          ...candle,
+          lit: true,
+          extinguishedAt: 0,
+        }));
+        let smoke = [];
+        let sparks = [];
+        let confetti = [];
+        let twinkles = [];
+        const balloons = [
+          { x: 102, y: 213, color: "#ee7572", phase: 0, releasedAt: 0 },
+          { x: 855, y: 225, color: "#7eb7a5", phase: 1, releasedAt: 0 },
+          { x: 796, y: 328, color: "#eab651", phase: 2, releasedAt: 0 },
+        ];
+        let microphoneStream;
+        let analyser;
+        let audioContext;
+        let analyserData;
+        let blowStartedAt = 0;
+        let blowTriggered = false;
+        let musicPrimed = false;
+        let musicPlayed = false;
+        let celebrationStarted = false;
+        let cardOpened = false;
+        let cardOpenedAt = 0;
+        let currentMeter = 0;
+        let windLevel = 0;
+        let celebrationAt = 0;
+        let wishSmokeAt = 0;
+
+        function resizeCanvas() {
+          const bounds = canvas.getBoundingClientRect();
+          const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = Math.round(bounds.width * pixelRatio);
+          canvas.height = Math.round(bounds.height * pixelRatio);
+          canvasWidth = bounds.width;
+          canvasHeight = bounds.height;
+          context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        }
+
+        function randomBetween(minimum, maximum) {
+          return minimum + Math.random() * (maximum - minimum);
+        }
+
+        function drawRoundedRect(x, y, width, height, radius, fillStyle) {
+          context.beginPath();
+          context.roundRect(x, y, width, height, radius);
+          context.fillStyle = fillStyle;
+          context.fill();
+        }
+
+        function cardOpeningProgress() {
+          if (!cardOpened) return 0;
+          if (reducedMotion) return 1;
+          return Math.min(1, (performance.now() - cardOpenedAt) / 720);
+        }
+
+        function celebrationProgress() {
+          if (!celebrationStarted) return 0;
+          if (reducedMotion) return 1;
+          return Math.min(1, (performance.now() - celebrationAt) / 1600);
+        }
+
+        function drawCardCover(time, openness) {
+          if (!openness) {
+            context.fillStyle = "#f8d680";
+            context.fillRect(0, 0, designWidth, designHeight);
+            context.fillStyle = "rgba(255, 250, 232, 0.46)";
+            for (let dot = 0; dot < 150; dot += 1) {
+              const x = (dot * 71) % designWidth;
+              const y = (dot * 113) % designHeight;
+              context.fillRect(x, y, 1.5, 1.5);
+            }
+          }
+
+          const progress = openness * openness * (3 - 2 * openness);
+          const leftX = 130 - 500 * progress;
+          const rightX = 480 + 500 * progress;
+          const alpha = 1 - openness;
+          context.globalAlpha = alpha;
+          drawRoundedRect(leftX, 92, 350, 452, 10, "#e56e69");
+          drawRoundedRect(rightX, 92, 350, 452, 10, "#e56e69");
+          context.strokeStyle = "#8f4653";
+          context.lineWidth = 4;
+          context.strokeRect(leftX + 12, 104, 326, 428);
+          context.strokeRect(rightX + 12, 104, 326, 428);
+
+          context.fillStyle = "#f6c45b";
+          context.fillRect(leftX + 155, 92, 40, 452);
+          context.fillRect(rightX + 155, 92, 40, 452);
+          context.fillStyle = "#f7e8b2";
+          context.beginPath();
+          context.arc(480, 92, 48, 0, Math.PI * 2);
+          context.fill();
+          context.fillStyle = "#e56e69";
+          context.beginPath();
+          context.arc(457, 90, 22, 0, Math.PI * 2);
+          context.arc(503, 90, 22, 0, Math.PI * 2);
+          context.fill();
+
+          context.fillStyle = "#fff8de";
+          context.textAlign = "center";
+          context.font = "800 42px 'Cooper Black', 'Bodoni 72', Georgia, serif";
+          context.fillText("FOR YOU", 480, 282);
+          context.font = "700 18px 'Avenir Next', 'Segoe UI', sans-serif";
+          context.fillText("A tiny birthday surprise", 480, 316);
+          context.font = "700 16px 'Avenir Next', 'Segoe UI', sans-serif";
+          context.fillText("tap to open", 480, 495 + Math.sin(time / 300) * 2);
+          context.globalAlpha = 1;
+        }
+
+        function drawBackground(time) {
+          const night = celebrationProgress();
+          const sky = context.createLinearGradient(0, 0, 0, designHeight);
+          sky.addColorStop(0, "#f8d680");
+          sky.addColorStop(0.57, "#f9e8bd");
+          sky.addColorStop(1, "#f7cda1");
+          context.fillStyle = sky;
+          context.fillRect(0, 0, designWidth, designHeight);
+
+          context.fillStyle = "rgba(255, 250, 232, 0.42)";
+          for (let line = -1; line < 5; line += 1) {
+            context.beginPath();
+            context.moveTo(line * 280 + 50, 0);
+            context.lineTo(line * 280 + 340, 0);
+            context.lineTo(line * 280 + 120, designHeight);
+            context.lineTo(line * 280 - 170, designHeight);
+            context.closePath();
+            context.fill();
+          }
+
+          context.strokeStyle = "rgba(91, 57, 73, 0.22)";
+          context.lineWidth = 2;
+          context.beginPath();
+          context.moveTo(0, 86);
+          context.bezierCurveTo(230, 140, 420, 35, 648, 91);
+          context.bezierCurveTo(777, 124, 858, 111, 960, 48);
+          context.stroke();
+
+          const pennants = [
+            "#e56e69",
+            "#79bda4",
+            "#eab64d",
+            "#8aa4d4",
+            "#d8799d",
+            "#e56e69",
+            "#79bda4",
+          ];
+          context.globalAlpha = 1 - night;
+          pennants.forEach((color, index) => {
+            const x = 92 + index * 116;
+            const flutter = windLevel * (8 + (index % 2) * 5);
+            context.beginPath();
+            context.moveTo(
+              x,
+              77 + Math.sin(time / 700 + index) * (2 + windLevel * 4),
+            );
+            context.lineTo(x + 54 + flutter, 91);
+            context.lineTo(x + 26 + flutter * 0.72, 137);
+            context.closePath();
+            context.fillStyle = color;
+            context.fill();
+          });
+          context.globalAlpha = 1;
+
+          balloons.forEach((balloon) => drawBalloon(balloon, time));
+
+          context.fillStyle = "rgba(86, 56, 76, 0.15)";
+          context.fillRect(0, 554, designWidth, designHeight - 554);
+          context.fillStyle = "#e6ae72";
+          context.fillRect(0, 560, designWidth, designHeight - 560);
+          context.fillStyle = "rgba(118, 70, 64, 0.15)";
+          for (let x = -40; x < designWidth; x += 74) {
+            context.fillRect(x, 560, 3, 80);
+          }
+
+          if (night) drawNightScene(time, night);
+        }
+
+        function drawNightScene(time, progress) {
+          context.fillStyle = `rgba(22, 38, 74, ${progress * 0.86})`;
+          context.fillRect(0, 0, designWidth, designHeight);
+
+          const stars = [
+            [73, 132],
+            [172, 76],
+            [274, 170],
+            [362, 82],
+            [454, 133],
+            [558, 60],
+            [654, 155],
+            [747, 87],
+            [862, 144],
+            [915, 242],
+            [49, 331],
+            [184, 282],
+            [720, 279],
+            [606, 227],
+            [308, 244],
+            [535, 316],
+          ];
+          stars.forEach(([x, y], index) => {
+            const pulse = 0.4 + 0.6 * Math.abs(Math.sin(time / 440 + index));
+            context.fillStyle = `rgba(255, 244, 183, ${progress * pulse})`;
+            context.beginPath();
+            context.arc(x, y, 1.5 + pulse * 1.5, 0, Math.PI * 2);
+            context.fill();
+          });
+
+          context.strokeStyle = `rgba(255, 232, 157, ${progress * 0.8})`;
+          context.lineWidth = 2;
+          context.beginPath();
+          context.moveTo(0, 86);
+          context.bezierCurveTo(230, 140, 420, 35, 648, 91);
+          context.bezierCurveTo(777, 124, 858, 111, 960, 48);
+          context.stroke();
+          for (let index = 0; index < 10; index += 1) {
+            const x = 56 + index * 95;
+            const y = 95 + Math.sin(index * 0.72) * 20;
+            const glow = 0.55 + 0.45 * Math.sin(time / 280 + index);
+            context.fillStyle = `rgba(255, 205, 94, ${progress * (0.55 + glow * 0.35)})`;
+            context.beginPath();
+            context.arc(x, y, 5 + glow * 1.7, 0, Math.PI * 2);
+            context.fill();
+          }
+        }
+
+        function drawBalloon(balloon, time) {
+          const releasedFor =
+            balloon.releasedAt ?
+              Math.min(1, (performance.now() - balloon.releasedAt) / 1500)
+            : 0;
+          if (releasedFor >= 1) return;
+          const windOffset = windLevel * 14;
+          const offset =
+            Math.sin(time / 820 + balloon.phase) * (5 + windLevel * 5) +
+            windOffset +
+            Math.sin(releasedFor * Math.PI * 4) * 16;
+          const x = balloon.x + offset;
+          const y = balloon.y - releasedFor * 360;
+          context.save();
+          context.globalAlpha = 1 - releasedFor;
+          context.beginPath();
+          context.ellipse(x, y, 36, 46, -0.14, 0, Math.PI * 2);
+          context.fillStyle = balloon.color;
+          context.fill();
+          context.beginPath();
+          context.moveTo(x - 6, y + 42);
+          context.lineTo(x + 3, y + 52);
+          context.lineTo(x + 10, y + 42);
+          context.fill();
+          context.strokeStyle = "rgba(91, 57, 73, 0.42)";
+          context.lineWidth = 1.5;
+          context.beginPath();
+          context.moveTo(x + 3, y + 52);
+          context.quadraticCurveTo(
+            x - 7 + windLevel * 9,
+            y + 108,
+            x + 16 + windLevel * 18,
+            y + 148,
+          );
+          context.stroke();
+          context.fillStyle = "rgba(255,255,255,0.42)";
+          context.beginPath();
+          context.ellipse(x - 12, y - 12, 8, 15, -0.45, 0, Math.PI * 2);
+          context.fill();
+          context.restore();
+        }
+
+        function drawCake(time) {
+          context.fillStyle = "rgba(85, 48, 66, 0.22)";
+          context.beginPath();
+          context.ellipse(480, 558, 316, 22, 0, 0, Math.PI * 2);
+          context.fill();
+
+          drawRoundedRect(195, 504, 570, 32, 12, "#fff1d3");
+          context.strokeStyle = "#b86b68";
+          context.lineWidth = 3;
+          context.strokeRect(195, 504, 570, 32);
+
+          drawLayer(244, 392, 470, 118, "#f49a82", "#bd5d62", "#fff2d5", time);
+          drawLayer(
+            287,
+            304,
+            384,
+            98,
+            "#f6bf61",
+            "#bf7857",
+            "#fff2d5",
+            time + 120,
+          );
+          drawLayer(
+            341,
+            236,
+            277,
+            74,
+            "#d9839c",
+            "#a95776",
+            "#fff2d5",
+            time + 240,
+          );
+
+          context.fillStyle = "#f5c5d0";
+          context.beginPath();
+          context.ellipse(480, 236, 139, 18, 0, 0, Math.PI * 2);
+          context.fill();
+          context.fillStyle = "rgba(255,255,255,0.6)";
+          context.beginPath();
+          context.ellipse(448, 230, 49, 7, -0.08, 0, Math.PI * 2);
+          context.fill();
+
+          candles.forEach((candle, index) => drawCandle(candle, index, time));
+          drawCherry(485, 211);
+        }
+
+        function drawLayer(
+          x,
+          y,
+          width,
+          height,
+          cakeColor,
+          edgeColor,
+          frostingColor,
+          time,
+        ) {
+          context.fillStyle = cakeColor;
+          context.fillRect(x, y, width, height);
+          context.fillStyle = edgeColor;
+          context.fillRect(x, y + height - 8, width, 8);
+          context.fillStyle = frostingColor;
+          context.beginPath();
+          context.ellipse(x + width / 2, y, width / 2, 20, 0, 0, Math.PI * 2);
+          context.fill();
+          context.fillRect(x, y - 1, width, 8);
+          context.fillStyle = frostingColor;
+          for (let drip = x + 24; drip < x + width - 12; drip += 45) {
+            const length = 11 + Math.sin(time / 350 + drip) * 3;
+            context.fillRect(drip, y + 2, 15, length);
+            context.beginPath();
+            context.arc(drip + 7.5, y + length, 7.5, 0, Math.PI);
+            context.fill();
+          }
+          context.fillStyle = "rgba(255,255,255,0.22)";
+          context.fillRect(x + 20, y + 22, 8, height - 42);
+        }
+
+        function drawCherry(x, y) {
+          context.fillStyle = "#cd4f5a";
+          context.beginPath();
+          context.arc(x, y, 15, 0, Math.PI * 2);
+          context.fill();
+          context.strokeStyle = "#5c8f5a";
+          context.lineWidth = 4;
+          context.beginPath();
+          context.moveTo(x, y - 13);
+          context.quadraticCurveTo(x + 13, y - 34, x + 27, y - 31);
+          context.stroke();
+        }
+
+        function drawCandle(candle, index, time) {
+          const candleHeight = 56;
+          const candleWidth = 17;
+          const baseY = candle.y;
+          context.fillStyle = candle.color;
+          context.fillRect(
+            candle.x - candleWidth / 2,
+            baseY - candleHeight,
+            candleWidth,
+            candleHeight,
+          );
+          context.fillStyle = "rgba(255, 255, 255, 0.62)";
+          context.fillRect(
+            candle.x - candleWidth / 2 + 4,
+            baseY - candleHeight + 3,
+            4,
+            candleHeight - 6,
+          );
+          context.fillStyle = "#845351";
+          context.fillRect(candle.x - 1.5, baseY - candleHeight - 9, 3, 10);
+
+          if (candle.lit) {
+            const flutter =
+              Math.sin(time / 100 + index * 1.3) * 2 + windLevel * 10;
+            const flameY = baseY - candleHeight - 22;
+            context.save();
+            context.translate(candle.x + flutter, flameY);
+            context.rotate(
+              Math.sin(time / 140 + index) * 0.09 + windLevel * 0.42,
+            );
+            context.beginPath();
+            context.moveTo(0, -18);
+            context.bezierCurveTo(12, -7, 11, 8, 0, 12);
+            context.bezierCurveTo(-11, 8, -12, -7, 0, -18);
+            context.fillStyle = "#f28c3c";
+            context.fill();
+            context.beginPath();
+            context.moveTo(0, -9);
+            context.bezierCurveTo(6, -3, 5, 5, 0, 8);
+            context.bezierCurveTo(-5, 5, -6, -3, 0, -9);
+            context.fillStyle = "#fff2a6";
+            context.fill();
+            context.restore();
+          }
+        }
+
+        function createSmoke(x, y) {
+          for (let index = 0; index < 9; index += 1) {
+            smoke.push({
+              x: x + randomBetween(-3, 3),
+              y,
+              vx: randomBetween(-0.42, 0.42),
+              vy: randomBetween(-1.1, -0.45),
+              size: randomBetween(5, 11),
+              life: 1,
+              fade: randomBetween(0.008, 0.016),
+            });
+          }
+        }
+
+        function createSparks(x, y) {
+          for (let index = 0; index < 5; index += 1) {
+            sparks.push({
+              x,
+              y,
+              vx: randomBetween(-1.8, 1.8),
+              vy: randomBetween(-2.8, -0.7),
+              life: 1,
+              color: index % 2 ? "#f2ae45" : "#fff3b8",
+            });
+          }
+        }
+
+        function createTwinkles(x, y, amount) {
+          for (let index = 0; index < amount; index += 1) {
+            twinkles.push({
+              x,
+              y,
+              vx: randomBetween(-2.7, 2.7),
+              vy: randomBetween(-3.3, -0.7),
+              size: randomBetween(3, 7),
+              life: 1,
+              fade: randomBetween(0.018, 0.035),
+              color: index % 2 ? "#fff2aa" : "#f7a96a",
+            });
+          }
+        }
+
+        function createConfetti() {
+          for (let index = 0; index < 150; index += 1) {
+            confetti.push({
+              x: randomBetween(90, 870),
+              y: randomBetween(-180, -10),
+              vx: randomBetween(-1.8, 1.8),
+              vy: randomBetween(1.5, 4.8),
+              spin: randomBetween(-0.22, 0.22),
+              angle: randomBetween(0, Math.PI * 2),
+              size: randomBetween(5, 10),
+              color: ["#e7676d", "#7cbda4", "#e9b94e", "#7e97c8", "#d77fa1"][
+                index % 5
+              ],
+            });
+          }
+        }
+
+        function drawEffects() {
+          smoke = smoke.filter((puff) => puff.life > 0.02);
+          smoke.forEach((puff) => {
+            puff.x += puff.vx;
+            puff.y += puff.vy;
+            puff.size += 0.11;
+            puff.life -= puff.fade;
+            context.beginPath();
+            context.arc(puff.x, puff.y, puff.size, 0, Math.PI * 2);
+            context.fillStyle = `rgba(108, 96, 112, ${puff.life * 0.28})`;
+            context.fill();
+          });
+
+          sparks = sparks.filter((spark) => spark.life > 0.03);
+          sparks.forEach((spark) => {
+            spark.x += spark.vx;
+            spark.y += spark.vy;
+            spark.vy += 0.09;
+            spark.life -= 0.035;
+            context.fillStyle = spark.color;
+            context.globalAlpha = spark.life;
+            context.fillRect(spark.x, spark.y, 3, 3);
+            context.globalAlpha = 1;
+          });
+
+          twinkles = twinkles.filter((twinkle) => twinkle.life > 0.03);
+          twinkles.forEach((twinkle) => {
+            twinkle.x += twinkle.vx;
+            twinkle.y += twinkle.vy;
+            twinkle.vy += 0.05;
+            twinkle.life -= twinkle.fade;
+            context.save();
+            context.translate(twinkle.x, twinkle.y);
+            context.globalAlpha = twinkle.life;
+            context.fillStyle = twinkle.color;
+            context.beginPath();
+            context.moveTo(0, -twinkle.size);
+            context.lineTo(twinkle.size * 0.35, -twinkle.size * 0.35);
+            context.lineTo(twinkle.size, 0);
+            context.lineTo(twinkle.size * 0.35, twinkle.size * 0.35);
+            context.lineTo(0, twinkle.size);
+            context.lineTo(-twinkle.size * 0.35, twinkle.size * 0.35);
+            context.lineTo(-twinkle.size, 0);
+            context.lineTo(-twinkle.size * 0.35, -twinkle.size * 0.35);
+            context.closePath();
+            context.fill();
+            context.restore();
+          });
+
+          confetti.forEach((piece) => {
+            piece.x += piece.vx;
+            piece.y += piece.vy;
+            piece.vy += 0.025;
+            piece.angle += piece.spin;
+            context.save();
+            context.translate(piece.x, piece.y);
+            context.rotate(piece.angle);
+            context.fillStyle = piece.color;
+            context.fillRect(
+              -piece.size / 2,
+              -piece.size / 4,
+              piece.size,
+              piece.size / 2,
+            );
+            context.restore();
+          });
+          confetti = confetti.filter((piece) => piece.y < designHeight + 30);
+
+          drawWishSmoke();
+        }
+
+        function drawWishSmoke() {
+          if (!wishSmokeAt) return;
+          const elapsed = performance.now() - wishSmokeAt;
+          if (elapsed > 5200) {
+            wishSmokeAt = 0;
+            return;
+          }
+          const rise = Math.min(1, elapsed / 1000);
+          const fade = Math.min(1, Math.max(0, (5200 - elapsed) / 1000));
+          const opacity = Math.min(1, elapsed / 260) * fade * 0.9;
+          const centerY = 236 - rise * 94;
+          context.save();
+          context.translate(480, centerY);
+          context.strokeStyle = `rgba(231, 239, 250, ${opacity * 0.68})`;
+          context.lineWidth = 3.5;
+          context.setLineDash([4, 8]);
+          context.lineDashOffset = -elapsed / 38;
+          context.beginPath();
+          context.moveTo(0, 63);
+          context.bezierCurveTo(-122, 0, -62, -85, 0, -28);
+          context.bezierCurveTo(62, -85, 122, 0, 0, 63);
+          context.stroke();
+          context.restore();
+          for (let index = 0; index < 42; index += 1) {
+            const angle = (Math.PI * 2 * index) / 42;
+            const x = 480 + 5 * 16 * Math.sin(angle) ** 3;
+            const y =
+              centerY -
+              4.1 *
+                (13 * Math.cos(angle) -
+                  5 * Math.cos(2 * angle) -
+                  2 * Math.cos(3 * angle) -
+                  Math.cos(4 * angle));
+            context.fillStyle = `rgba(226, 232, 244, ${opacity * (0.66 + (index % 5) / 12)})`;
+            context.beginPath();
+            context.arc(x, y, 3.5 + (index % 3), 0, Math.PI * 2);
+            context.fill();
+          }
+        }
+
+        function drawWind(time) {
+          if (windLevel < 0.05) return;
+          context.save();
+          context.strokeStyle = `rgba(255, 250, 224, ${0.25 + windLevel * 0.38})`;
+          context.lineWidth = 1.5 + windLevel * 1.5;
+          for (let index = 0; index < 6; index += 1) {
+            const y = 190 + index * 46 + Math.sin(time / 170 + index) * 9;
+            const x = 126 + ((time / 10 + index * 140) % 430);
+            context.beginPath();
+            context.moveTo(x, y);
+            context.bezierCurveTo(
+              x + 40,
+              y - 12,
+              x + 82,
+              y + 12,
+              x + 136,
+              y - 3,
+            );
+            context.stroke();
+          }
+          context.restore();
+        }
+
+        function render(now) {
+          const time = now - startTime;
+          context.clearRect(0, 0, canvasWidth, canvasHeight);
+          context.save();
+          context.scale(canvasWidth / designWidth, canvasHeight / designHeight);
+          if (!cardOpened) {
+            drawCardCover(time, 0);
+          } else {
+            drawBackground(time);
+            drawCake(time);
+            drawWind(time);
+            drawEffects();
+            const openingProgress = cardOpeningProgress();
+            if (openingProgress < 1) drawCardCover(time, openingProgress);
+          }
+          context.restore();
+          requestAnimationFrame(render);
+        }
+
+        function updateWishCount() {
+          const remaining = candles.filter((candle) => candle.lit).length;
+          wishCount.textContent =
+            remaining ? `${remaining} wishes alight` : "wish released";
+        }
+
+        function extinguishCandle(index) {
+          const candle = candles[index];
+          if (!candle || !candle.lit) return;
+          candle.lit = false;
+          candle.extinguishedAt = performance.now();
+          createSmoke(candle.x, candle.y - 78);
+          createSparks(candle.x, candle.y - 72);
+          updateWishCount();
+          if (!candles.some((item) => item.lit)) beginCelebration();
+        }
+
+        function extinguishAll() {
+          if (blowTriggered) return;
+          blowTriggered = true;
+          candles.forEach((candle, index) => {
+            if (candle.lit)
+              window.setTimeout(() => extinguishCandle(index), index * 95);
+          });
+        }
+
+        function stopMicrophone() {
+          if (microphoneStream) {
+            microphoneStream.getTracks().forEach((track) => track.stop());
+            microphoneStream = undefined;
+          }
+          if (audioContext && audioContext.state !== "closed")
+            audioContext.close();
+          analyser = undefined;
+        }
+
+        async function playBirthdayMusic() {
+          if (musicPlayed) return;
+          musicPlayed = true;
+          music.muted = false;
+          music.volume = 0.9;
+          try {
+            await music.play();
+          } catch (error) {
+            status.textContent = "愿望已送达";
+          }
+        }
+
+        function beginCelebration() {
+          if (celebrationStarted) return;
+          celebrationStarted = true;
+          celebrationAt = performance.now();
+          wishSmokeAt = celebrationAt;
+          status.textContent = "生日快乐";
+          microphoneButton.hidden = true;
+          meterFill.style.setProperty("--meter", "100%");
+          createConfetti();
+          createTwinkles(480, 236, 34);
+          stopMicrophone();
+          playBirthdayMusic();
+        }
+
+        function monitorBlow() {
+          if (!analyser || blowTriggered) return;
+          analyser.getByteTimeDomainData(analyserData);
+          const amplitude =
+            analyserData.reduce(
+              (total, value) => total + Math.abs(value - 128),
+              0,
+            ) / analyserData.length;
+          currentMeter += (amplitude - currentMeter) * 0.35;
+          const percentage = Math.min(100, Math.max(0, currentMeter * 5.4));
+          meterFill.style.setProperty("--meter", `${percentage}%`);
+          windLevel +=
+            (Math.min(1, Math.max(0, (amplitude - 3) / 15)) - windLevel) * 0.3;
+          const blowing = amplitude > 12;
+          if (blowing) {
+            if (!blowStartedAt) blowStartedAt = performance.now();
+            if (performance.now() - blowStartedAt > 260) extinguishAll();
+          } else {
+            blowStartedAt = 0;
+          }
+          requestAnimationFrame(monitorBlow);
+        }
+
+        async function primeMusic() {
+          if (musicPrimed) return;
+          try {
+            music.muted = true;
+            await music.play();
+            music.pause();
+            music.currentTime = 0;
+            music.muted = false;
+            musicPrimed = true;
+          } catch (error) {
+            music.muted = false;
+          }
+        }
+
+        async function activateMicrophone() {
+          await primeMusic();
+          if (!navigator.mediaDevices?.getUserMedia) {
+            status.textContent = "点击火焰，送出愿望";
+            microphoneButton.hidden = true;
+            return;
+          }
+          microphoneButton.disabled = true;
+          microphoneButton.textContent = "正在聆听";
+          try {
+            microphoneStream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false,
+              },
+            });
+            audioContext = new AudioContext();
+            const microphoneSource =
+              audioContext.createMediaStreamSource(microphoneStream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 512;
+            analyser.smoothingTimeConstant = 0.25;
+            analyserData = new Uint8Array(analyser.fftSize);
+            microphoneSource.connect(analyser);
+            status.textContent = "正在聆听你的愿望";
+            microphoneButton.hidden = true;
+            monitorBlow();
+          } catch (error) {
+            status.textContent = "点击火焰，送出愿望";
+            microphoneButton.disabled = false;
+            microphoneButton.textContent = "重试吹气";
+          }
+        }
+
+        function canvasPosition(event) {
+          const bounds = canvas.getBoundingClientRect();
+          return {
+            x: ((event.clientX - bounds.left) * designWidth) / bounds.width,
+            y: ((event.clientY - bounds.top) * designHeight) / bounds.height,
+          };
+        }
+
+        function findCandleAt(position) {
+          return candles.findIndex((candle) => {
+            const flameX = candle.x;
+            const flameY = candle.y - 78;
+            return (
+              candle.lit &&
+              Math.hypot(position.x - flameX, position.y - flameY) < 38
+            );
+          });
+        }
+
+        function findBalloonAt(position) {
+          return balloons.findIndex(
+            (balloon) =>
+              !balloon.releasedAt &&
+              Math.hypot(position.x - balloon.x, position.y - balloon.y) < 48,
+          );
+        }
+
+        function isCherryAt(position) {
+          return Math.hypot(position.x - 485, position.y - 211) < 32;
+        }
+
+        function releaseBalloon(index) {
+          const balloon = balloons[index];
+          if (!balloon || balloon.releasedAt) return;
+          balloon.releasedAt = performance.now();
+          createTwinkles(balloon.x, balloon.y, 18);
+        }
+
+        function openCard() {
+          if (cardOpened) return;
+          cardOpened = true;
+          cardOpenedAt = performance.now();
+          status.textContent = "许个愿，然后吹一口气";
+          microphoneButton.hidden = false;
+          canvas.setAttribute(
+            "aria-label",
+            "带六支蜡烛的生日蛋糕，点击火焰可以熄灭蜡烛",
+          );
+        }
+
+        canvas.addEventListener("pointermove", (event) => {
+          if (!cardOpened) {
+            canvas.style.cursor = "pointer";
+            return;
+          }
+          const position = canvasPosition(event);
+          canvas.style.cursor =
+            (
+              findCandleAt(position) >= 0 ||
+              findBalloonAt(position) >= 0 ||
+              isCherryAt(position)
+            ) ?
+              "pointer"
+            : "default";
+        });
+
+        canvas.addEventListener("pointerdown", async (event) => {
+          if (!cardOpened) {
+            openCard();
+            return;
+          }
+          const position = canvasPosition(event);
+          const index = findCandleAt(position);
+          if (index >= 0) {
+            await primeMusic();
+            extinguishCandle(index);
+            return;
+          }
+          const balloonIndex = findBalloonAt(position);
+          if (balloonIndex >= 0) {
+            releaseBalloon(balloonIndex);
+            return;
+          }
+          if (!isCherryAt(position)) return;
+          createTwinkles(485, 211, 24);
+        });
+
+        microphoneButton.addEventListener("click", activateMicrophone);
+        window.addEventListener("resize", resizeCanvas);
+        window.addEventListener("pagehide", stopMicrophone);
+
+        resizeCanvas();
+        status.textContent = "点开这张贺卡";
+        microphoneButton.hidden = true;
+        canvas.setAttribute("aria-label", "一张等待打开的生日贺卡");
+        updateWishCount();
+        if (reducedMotion) startTime = performance.now() - 500;
+        requestAnimationFrame(render);
+      })();
+    </script>
+  </body>
+</html>
