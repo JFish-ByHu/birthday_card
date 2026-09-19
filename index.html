@@ -611,7 +611,7 @@
           context.save();
           context.translate(offsetX, offsetY);
           context.beginPath();
-          context.rect(side === "left" ? 195 : 480, 195, 285, 325);
+          context.rect(side === "left" ? 195 : 480, 0, 285, 520);
           context.clip();
           drawCakeDetails(time);
           context.restore();
